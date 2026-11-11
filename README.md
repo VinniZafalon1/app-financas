@@ -1,54 +1,76 @@
-# Saldo — controle financeiro pessoal
+﻿# Saldo — controle financeiro pessoal
 
-Aplicativo responsivo de finanças pessoais feito com Ionic Vue, Vue 3 Composition API, Supabase, ApexCharts e Capacitor. Inclui projeto nativo Android.
+Aplicativo de finanças pessoais criado com **Ionic Vue**, Vue 3, Supabase, ApexCharts e Capacitor. A interface funciona na web e o projeto inclui uma versão Android.
 
-## Rodar localmente
+## Requisitos
 
-1. Instale Node.js 20 ou superior.
-2. Na pasta do projeto, execute `npm install` e `npm run dev`.
-3. Sem credenciais, use **Explorar demonstração** na tela inicial. Os lançamentos de exemplo e as alterações ficam no `localStorage` deste navegador.
+- Node.js 20 ou superior
+- npm
+- Para compilar Android: Android Studio, Android SDK e o JDK incluído no Android Studio
 
-## Conectar ao Supabase
+## Instalar e executar
 
-1. Crie um projeto Supabase e habilite autenticação por e-mail/senha.
-2. Copie `.env.example` para `.env.local` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` com os dados de API do projeto. Projetos antigos também podem usar `VITE_SUPABASE_ANON_KEY`.
-3. Execute [supabase/schema.sql](supabase/schema.sql) no SQL Editor do Supabase. As tabelas têm RLS para que cada conta acesse somente os próprios lançamentos.
-4. Em Authentication > URL Configuration, adicione `http://localhost:5173/login` e `br.com.vzafalon.saldo://auth-callback` à lista de Redirect URLs. Defina também a Site URL usada para a versão web publicada.
-5. Em Authentication > Sign In / Providers, habilite Email e permita novos cadastros. A confirmação por e-mail está integrada ao retorno por deep link no Android.
-6. Reinicie `npm run dev` e use **Criar conta** para cadastrar um usuário.
+```bash
+npm install
+npm run dev
+```
 
-O modo conectado e o modo demonstração são mutuamente exclusivos: com as variáveis de ambiente configuradas, o app usa Supabase para autenticação e persistência. Nunca coloque a chave `service_role` no frontend.
+Abra o endereço local exibido pelo Vite. Sem configurar o Supabase, entre em **Explorar demonstração** para usar o app com dados de exemplo salvos no navegador.
+
+Para gerar uma compilação web:
+
+```bash
+npm run build
+```
+
+## Funcionalidades
+
+- Cadastro, login e logout com Supabase Auth, além de modo demonstração local.
+- Dashboard com receitas, despesas, saldo, percentual comprometido, categorias, evolução mensal e movimentações recentes.
+- Cadastro, edição, exclusão, busca e filtro de receitas e despesas.
+- Personalização do perfil com nome, cor do avatar e foto. A foto pode ser trocada ou removida.
+- Layout responsivo para computador e celular, com navegação por menu e barra inferior.
+
+## Configurar o Supabase
+
+1. Crie um projeto Supabase e habilite autenticação por e-mail e senha.
+2. Crie o arquivo `.env.local` na raiz do projeto, com os dados do seu projeto:
+
+   ```env
+   VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=SUA_CHAVE_PUBLICAVEL
+   ```
+
+   Em projetos antigos, a chave também pode ser informada como `VITE_SUPABASE_ANON_KEY`. Use somente a chave publicável/anon no aplicativo. Nunca inclua a chave `service_role` no frontend.
+
+3. Execute [supabase/schema.sql](supabase/schema.sql) no SQL Editor. O script cria as tabelas de receitas e despesas e as políticas RLS para cada usuário acessar somente os próprios lançamentos.
+4. Para habilitar fotos de perfil, crie no Storage um bucket chamado `profile-avatars`. Deixe-o privado, configure o limite máximo em 2 MB e permita `image/jpeg`.
+5. Execute [supabase/profile-storage.sql](supabase/profile-storage.sql) no SQL Editor para aplicar as políticas de acesso às fotos. Cada pessoa acessa apenas os arquivos da própria pasta.
+6. Em **Authentication > URL Configuration**, configure a URL do seu app e adicione `http://localhost:5173/login` e `br.com.vzafalon.saldo://auth-callback` às URLs de redirecionamento.
+7. Em **Authentication > Sign In / Providers**, habilite Email e permita novos cadastros. Reinicie o servidor depois de criar ou alterar `.env.local`.
+
+O app usa o Supabase quando as variáveis de ambiente estão configuradas. Sem elas, abre o modo demonstração local. No modo conectado, JPG, PNG e WebP são recortados para quadrado e convertidos para JPEG antes do envio; no modo demonstração, a foto fica salva no armazenamento local do navegador.
 
 ## Android
 
-O projeto Android já está criado em `android/`. O APK de depuração pode ser reconstruído com:
+O projeto nativo está na pasta `android/`. Configure `.env.local` antes de compilar para incluir a conexão Supabase no app. Para sincronizar a versão web com o projeto Android:
 
-1. Instale Android Studio, Android SDK e JDK (o JDK incluído no Android Studio serve).
-2. Configure `.env` antes do build para que o APK use o Supabase; sem ela, o APK usa o modo demonstração local.
-3. Execute `npm run android:sync` para compilar a web e sincronizar os arquivos nativos.
-4. Abra com `npm run android:open` e gere um APK assinado pelo Android Studio para distribuição. Para gerar o APK de depuração pela linha de comando, execute `gradlew.bat assembleDebug` dentro da pasta `android`.
+```bash
+npm run android:sync
+```
 
-O APK de depuração gerado neste workspace fica em `android/app/build/outputs/apk/debug/app-debug.apk`. Para iOS é necessário macOS e Xcode; esta plataforma ainda não foi gerada.
+Para abrir no Android Studio:
 
-## O que já está implementado
+```bash
+npm run android:open
+```
 
-- Cadastro, login, logout e navegação protegida com Supabase Auth.
-- Receitas e despesas com inclusão, edição, exclusão, busca e filtro por período.
-- Dashboard com receitas, despesas, saldo, percentual comprometido, distribuição por categoria, evolução mensal e movimentações recentes.
-- Validação de valores positivos, descrição, categoria e data.
-- Modo demonstração local para experimentar sem configurar credenciais.
-- Layout responsivo para telas grandes e celulares.
+Para gerar um APK de depuração no Windows, execute dentro da pasta `android`:
 
-## Empacotar para Android/iOS
+```powershell
+.\gradlew.bat assembleDebug
+```
 
-Para atualizar os arquivos nativos após mudanças, execute `npm run android:sync`.
+O arquivo gerado fica em `android/app/build/outputs/apk/debug/app-debug.apk`. Para distribuir o aplicativo, gere uma versão assinada pelo Android Studio.
 
-## Foto de perfil no Supabase
-
-Para habilitar o envio de fotos no modo conectado:
-
-1. No painel do Supabase, abra **Storage** e crie um bucket chamado `profile-avatars`. Deixe-o **privado**, defina o tamanho máximo como **2 MB** e permita apenas `image/jpeg`.
-2. Execute [supabase/profile-storage.sql](supabase/profile-storage.sql) no SQL Editor. As políticas restringem leitura, envio, atualização e remoção à pasta do próprio usuário.
-3. No app, a pessoa escolhe JPG, PNG ou WebP; a imagem é recortada para quadrado e convertida para JPEG antes do envio.
-
-No modo demonstração, a foto é salva no armazenamento local do navegador.
+O projeto Android está configurado. A plataforma iOS requer macOS e Xcode e ainda não foi criada neste projeto.
